@@ -14,31 +14,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Import selected images from the current MCM website
+      - name: Import available image assets
         shell: bash
         run: |
-          set -euo pipefail
           mkdir -p assets/images
-          download() {
-            local src="$1"; local dst="$2"
-            echo "Importing $src -> $dst"
-            curl --fail --location --retry 3 --silent --show-error "$src" -o "assets/images/$dst"
+          set +e
+          import_image() {
+            dst="$1"
+            shift
+            for src in "$@"; do
+              echo "Trying $src"
+              curl --fail --location --retry 2 --silent --show-error "$src" -o "assets/images/$dst" && return 0
+            done
+            echo "Skipping unavailable image: $dst"
+            rm -f "assets/images/$dst"
+            return 0
           }
-          download 'https://fotos-pur.de/img/MCM-2017SchlossDyck4.jpg' 'hero.jpg'
-          download 'https://fotos-pur.de/img/MCM-Copter2.JPG' 'inspection.jpg'
-          download 'https://fotos-pur.de/img/MissionPlanning3.jpg' 'survey.jpg'
-          download 'https://fotos-pur.de/img/defekte-solarzelle.jpeg' 'solar-thermal.jpg'
-          download 'https://fotos-pur.de/img/MCM-Copter3.JPG' 'special-uav.jpg'
-          download 'https://fotos-pur.de/img/MCM-RTK1.webp' 'rtk.jpg'
-          download 'https://fotos-pur.de/img/MCM-baudoku1.jpg' 'construction.jpg'
-          download 'https://fotos-pur.de/img/MCM-NDVI.jpg' 'agriculture.jpg'
-          download 'https://fotos-pur.de/img/3D-Arch%C3%A4ologie.png' 'archaeology.png'
-          download 'https://fotos-pur.de/img/MCM-Regal1.JPG' 'industrial-indoor.jpg'
-          download 'https://fotos-pur.de/img/Auto-FLIR2_neu.jpg' 'thermal-search.jpg'
-          download 'https://fotos-pur.de/img/MCM-Flieger1.JPG' 'uav-flight.jpg'
-          download 'https://fotos-pur.de/img/MCM_0262.JPG' 'uav-field.jpg'
-          download 'https://fotos-pur.de/img/MCM-WP1.jpg' 'energy.jpg'
-          download 'https://fotos-pur.de/img/uav1.jpeg' 'uav-platform.jpg'
+          import_image inspection.webp https://fotos-pur.de/img/MCM-Copter2.webp https://fotos-pur.de/img/MCM-Copter2.JPG https://fotos-pur.de/img/MCM-Copter2.jpg
+          import_image survey.webp https://fotos-pur.de/img/MissionPlanning3.webp https://fotos-pur.de/img/MissionPlanning3.jpg
+          import_image solar-thermal.webp https://fotos-pur.de/img/defekte-solarzelle.webp https://fotos-pur.de/img/defekte-solarzelle.jpeg https://fotos-pur.de/img/defekte-solarzelle.jpg
+          import_image special-uav.webp https://fotos-pur.de/img/MCM-Copter3.webp https://fotos-pur.de/img/MCM-Copter3.JPG https://fotos-pur.de/img/MCM-Copter3.jpg
+          import_image rtk.webp https://fotos-pur.de/img/MCM-RTK1.webp https://fotos-pur.de/img/MCM-RTK1.jpg
+          import_image construction.webp https://fotos-pur.de/img/MCM-baudoku1.webp https://fotos-pur.de/img/MCM-baudoku1.jpg
+          import_image agriculture.webp https://fotos-pur.de/img/MCM-NDVI.webp https://fotos-pur.de/img/MCM-NDVI.jpg
+          import_image archaeology.webp https://fotos-pur.de/img/3D-Arch%C3%A4ologie.webp https://fotos-pur.de/img/3D-Arch%C3%A4ologie.png
+          import_image industrial-indoor.webp https://fotos-pur.de/img/MCM-Regal1.webp https://fotos-pur.de/img/MCM-Regal1.JPG https://fotos-pur.de/img/MCM-Regal1.jpg
+          import_image thermal-search.webp https://fotos-pur.de/img/Auto-FLIR2_neu.webp https://fotos-pur.de/img/Auto-FLIR2_neu.jpg
+          import_image uav-flight.webp https://fotos-pur.de/img/MCM-Flieger1.webp https://fotos-pur.de/img/MCM-Flieger1.JPG https://fotos-pur.de/img/MCM-Flieger1.jpg
+          import_image uav-field.webp https://fotos-pur.de/img/MCM_0262.webp https://fotos-pur.de/img/MCM_0262.JPG https://fotos-pur.de/img/MCM_0262.jpg
+          import_image energy.webp https://fotos-pur.de/img/MCM-WP1.webp https://fotos-pur.de/img/MCM-WP1.jpg
+          import_image uav-platform.webp https://fotos-pur.de/img/uav1.webp https://fotos-pur.de/img/uav1.jpeg https://fotos-pur.de/img/uav1.jpg
       - name: Commit imported images
         shell: bash
         run: |
@@ -46,8 +51,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/images
           if git diff --cached --quiet; then
-            echo 'No image changes to commit.'
+            echo 'No new image assets were imported.'
             exit 0
           fi
-          git commit -m 'Add MCM image assets from current website'
+          git commit -m 'Import available MCM image assets'
           git push
