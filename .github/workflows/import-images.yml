@@ -1,4 +1,4 @@
-name: Import MCM website images
+name: Import MCM website image assets
 
 on:
   workflow_dispatch:
@@ -14,49 +14,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download current MCM image assets
+      - name: Import selected images from the current MCM website
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p assets/images
-          base='https://fotos-pur.de/img'
-          files=(
-            'DJI_0054.webp'
-            'carousel-10.webp'
-            'MCM-baudoku1.webp'
-            'MCM-RTK1.webp'
-            '3D-Archäologie.webp'
-            'defekte-solarzelle.webp'
-            'MCM-Agrar1.webp'
-            'MissionPlanning3.webp'
-            '1722189430744.webp'
-            'MCM-Copter2.webp'
-            'carousel-2.webp'
-            'MCM20260512-1.webp'
-            'MCM-Flieger1.webp'
-            'MCM-FHR1.webp'
-            'MCM-WP1.webp'
-            'MCM-Manta1.webp'
-            'MCM-Regal1.webp'
-            'MCM-Grenzen2.webp'
-            'MCM-2017SchlossDyck.webp'
-            'MCM-2017SchlossDyck2.webp'
-            'MCM-2017SchlossDyck4.webp'
-            'MCM-20170804-69.webp'
-            'MCM-Mofarennen1.webp'
-            'MCM-Agrar-NDVI.webp'
-            'MCM-NDVI.webp'
-            'Hohenholzer-Strae-782025-orthophoto-NDVI.webp'
-            'Hohenholzer-Strae-782025-orthophoto-VARI.webp'
-            'MCM3D.webp'
-            'MCM-Copter2.webp'
-            'uav1.webp'
-            'about.webp'
-          )
-          for f in "${files[@]}"; do
-            echo "Downloading $f"
-            curl --fail --location --retry 3 --silent --show-error "$base/$f" -o "assets/images/$f" || echo "Skipped unavailable: $f"
-          done
+          download() {
+            local src="$1"; local dst="$2"
+            echo "Importing $src -> $dst"
+            curl --fail --location --retry 3 --silent --show-error "$src" -o "assets/images/$dst"
+          }
+          download 'https://fotos-pur.de/img/MCM-2017SchlossDyck4.jpg' 'hero.jpg'
+          download 'https://fotos-pur.de/img/MCM-Copter2.JPG' 'inspection.jpg'
+          download 'https://fotos-pur.de/img/MissionPlanning3.jpg' 'survey.jpg'
+          download 'https://fotos-pur.de/img/defekte-solarzelle.jpeg' 'solar-thermal.jpg'
+          download 'https://fotos-pur.de/img/MCM-Copter3.JPG' 'special-uav.jpg'
+          download 'https://fotos-pur.de/img/MCM-RTK1.webp' 'rtk.jpg'
+          download 'https://fotos-pur.de/img/MCM-baudoku1.jpg' 'construction.jpg'
+          download 'https://fotos-pur.de/img/MCM-NDVI.jpg' 'agriculture.jpg'
+          download 'https://fotos-pur.de/img/3D-Arch%C3%A4ologie.png' 'archaeology.png'
+          download 'https://fotos-pur.de/img/MCM-Regal1.JPG' 'industrial-indoor.jpg'
+          download 'https://fotos-pur.de/img/Auto-FLIR2_neu.jpg' 'thermal-search.jpg'
+          download 'https://fotos-pur.de/img/MCM-Flieger1.JPG' 'uav-flight.jpg'
+          download 'https://fotos-pur.de/img/MCM_0262.JPG' 'uav-field.jpg'
+          download 'https://fotos-pur.de/img/MCM-WP1.jpg' 'energy.jpg'
+          download 'https://fotos-pur.de/img/uav1.jpeg' 'uav-platform.jpg'
       - name: Commit imported images
         shell: bash
         run: |
@@ -67,5 +49,5 @@ jobs:
             echo 'No image changes to commit.'
             exit 0
           fi
-          git commit -m 'Add MCM website image assets'
+          git commit -m 'Add MCM image assets from current website'
           git push
