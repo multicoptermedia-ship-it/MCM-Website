@@ -1,0 +1,71 @@
+name: Import MCM website images
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/import-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download current MCM image assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/images
+          base='https://fotos-pur.de/img'
+          files=(
+            'DJI_0054.webp'
+            'carousel-10.webp'
+            'MCM-baudoku1.webp'
+            'MCM-RTK1.webp'
+            '3D-Archäologie.webp'
+            'defekte-solarzelle.webp'
+            'MCM-Agrar1.webp'
+            'MissionPlanning3.webp'
+            '1722189430744.webp'
+            'MCM-Copter2.webp'
+            'carousel-2.webp'
+            'MCM20260512-1.webp'
+            'MCM-Flieger1.webp'
+            'MCM-FHR1.webp'
+            'MCM-WP1.webp'
+            'MCM-Manta1.webp'
+            'MCM-Regal1.webp'
+            'MCM-Grenzen2.webp'
+            'MCM-2017SchlossDyck.webp'
+            'MCM-2017SchlossDyck2.webp'
+            'MCM-2017SchlossDyck4.webp'
+            'MCM-20170804-69.webp'
+            'MCM-Mofarennen1.webp'
+            'MCM-Agrar-NDVI.webp'
+            'MCM-NDVI.webp'
+            'Hohenholzer-Strae-782025-orthophoto-NDVI.webp'
+            'Hohenholzer-Strae-782025-orthophoto-VARI.webp'
+            'MCM3D.webp'
+            'MCM-Copter2.webp'
+            'uav1.webp'
+            'about.webp'
+          )
+          for f in "${files[@]}"; do
+            echo "Downloading $f"
+            curl --fail --location --retry 3 --silent --show-error "$base/$f" -o "assets/images/$f" || echo "Skipped unavailable: $f"
+          done
+      - name: Commit imported images
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/images
+          if git diff --cached --quiet; then
+            echo 'No image changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Add MCM website image assets'
+          git push
